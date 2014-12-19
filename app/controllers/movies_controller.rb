@@ -1,15 +1,41 @@
 class MoviesController < ApplicationController
+
+  def add_params_to_session(*args)
+    args.each do |parameter|
+      session[parameter] = params[parameter] unless params[parameter].nil?
+    end
+  end
+
+  def perform_redirection(action, *args)
+    redirect_hash = {:action=>action}
+    do_redirect = false
+    args.each do |key|
+      do_redirect = true unless params[key] == session[key]
+      redirect_hash[key] = session[key]
+    end
+    if do_redirect
+      flash.keep if do_redirect
+      redirect_to redirect_hash
+    end
+  end
+
+  def show
+    id = params[:id] # retrieve movie ID from URI route
+    @movie = Movie.find(id) # look up movie by unique ID
+    # will render app/views/movies/show.<extension> by default
+  end
+
   def index
-    session[:ratings] = params[:ratings]
-    @movies = params[:ratings].nil?           ?
-              Movie .order(params[:sort_by])
-                    .all
-                                              :
-              Movie .order(params[:sort_by])
-                    .where(:rating => params[:ratings].keys )
+    add_params_to_session :ratings, :sort_by
+    session[:ratings] = Movie.all_ratings_hash unless session[:ratings]
+
+    @movies = Movie .order(session[:sort_by])
+                    .where(:rating => session[:ratings].keys )
                     .all
     @all_ratings = Movie.all_ratings
-    @filters = params[:ratings].nil?  ?  @all_ratings : params[:ratings]
+    @filters = session[:ratings]
+
+    perform_redirection 'index', :ratings, :sort_by
   end
 
   def new

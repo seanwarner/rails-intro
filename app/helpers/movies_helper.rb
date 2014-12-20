@@ -7,7 +7,6 @@ module MoviesHelper
     header == session[:sort_by] ? 'hilite' : ''
   end
   def sortable_link(key)
-    session[:sort_by] = key
     title = key.to_s.gsub(/_/, ' ').split.map(&:capitalize).join(' ')
     link_to title, movies_path(:sort_by => key), id: key.to_s + '_header'
   end
